@@ -1,0 +1,212 @@
+#include "lexer.h"
+
+#include <exception>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+
+#include "token.h"
+
+extern std::map<TokenType, std::string> TokenTypeName;
+extern std::map<std::string, TokenType> keywords;
+
+void Lexer::ReadFile(const std::string& filename) {
+    std::ifstream t(filename);
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    source_code = buffer.str();
+}
+
+Token Lexer::ParseInteger() {
+    std::size_t begin_idx = curr_idx;
+    while (curr_idx + 1 != source_code.size() &&
+           isdigit(source_code[curr_idx + 1])) {
+        ++curr_idx;
+    }
+    const auto size = curr_idx - begin_idx + 1;
+    const auto& rawInteger = source_code.substr(begin_idx, size);
+    ++curr_idx;
+    return Token{TokenType::INT_CONST, rawInteger, lineOfCode};
+}
+
+Token Lexer::ParseString() {
+    ++curr_idx;
+    std::string str;
+    while (true) {
+        if (curr_idx == source_code.size()) {
+            return Token{TokenType::ERROR, "EOF in string constant", lineOfCode};
+        }
+        if (source_code[curr_idx] == '\n') {
+            ++lineOfCode;
+            curr_idx += 1;
+            return Token{TokenType::ERROR, "Unterminated string constant",
+                         lineOfCode};
+        } else if (source_code[curr_idx] == '\\') {
+            if (curr_idx + 1 == source_code.size()) {
+                ++curr_idx;
+                return Token{TokenType::ERROR, "EOF in string constant", lineOfCode};
+            }
+            ++curr_idx;
+            const std::set<char> escaped_chars = {'b', 't', 'n', 'f'};
+            if (escaped_chars.count(source_code[curr_idx])) {
+                str += "\\";
+                str += source_code[curr_idx];
+            } else if (source_code[curr_idx] == '\n') {
+                ++lineOfCode;
+                str += "\\n";
+            } else {
+                str += source_code[curr_idx];
+            }
+            ++curr_idx;
+            continue;
+        } else if (source_code[curr_idx] == '\"') {
+            ++curr_idx;
+            return Token{TokenType::STR_CONST, str, lineOfCode};
+        } else {
+            str += source_code[curr_idx];
+            ++curr_idx;
+        }
+    }
+
+    return {};
+}
+
+Token Lexer::ParseIdentifier() {
+    // Type identifiers begin with a capital letter; object identifiers begin
+    // with a lower case letter.
+    std::size_t begin_idx = curr_idx;
+    while (curr_idx + 1 != source_code.size() &&
+           (std::isalnum(source_code[curr_idx + 1]) ||
+            source_code[curr_idx + 1] == '_')) {
+        ++curr_idx;
+    }
+    const auto size = curr_idx - begin_idx + 1;
+    const auto& rawIdentifier = source_code.substr(begin_idx, size);
+    ++curr_idx;
+
+    auto lower_indetifier = rawIdentifier;
+    std::transform(lower_indetifier.begin(), lower_indetifier.end(),
+                   lower_indetifier.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (keywords.count(lower_indetifier)) {
+        return Token{keywords[lower_indetifier], rawIdentifier, lineOfCode};
+    }
+
+    if (lower_indetifier[0] == rawIdentifier[0] &&
+        (lower_indetifier == "false" || lower_indetifier == "true")) {
+        return Token{TokenType::BOOL_CONST, lower_indetifier, lineOfCode};
+    }
+
+    TokenType type = std::islower(rawIdentifier[0]) ? TokenType::OBJECTID
+                                                    : TokenType::TYPEID;
+
+    return Token{type, rawIdentifier, lineOfCode};
+}
+
+Token Lexer::ParsePunctuation() {
+    std::set<char> uno_punctuation = {'(', ')', '.', ',', ':', ';', '{', '}',
+                                      '@', '~', '*', '/', '+', '-', '='};
+    if (source_code[curr_idx] == '<') {
+        ++curr_idx;
+        if (curr_idx == source_code.size()) {
+            return {TokenType::PUNCTUATION, "<", lineOfCode};
+        }
+        if (source_code[curr_idx] == '-') {
+            ++curr_idx;
+            return {TokenType::ASSIGN, "", lineOfCode};
+        }
+        if (source_code[curr_idx] == '=') {
+            ++curr_idx;
+            return {TokenType::LE, "", lineOfCode};
+        }
+
+        return {TokenType::PUNCTUATION, "<", lineOfCode};
+    }
+
+    if (uno_punctuation.count(source_code[curr_idx])) {
+        return Token{TokenType::PUNCTUATION,
+                     std::string() + source_code[curr_idx++], lineOfCode};
+    }
+
+    std::cerr << "PUNCT: " << curr_idx << " " << source_code[curr_idx]
+              << std::endl;
+
+    return {};
+}
+
+// !contract: NextToken produce token and set curr_idx to next symbol after
+// token
+Token Lexer::NextToken() {
+    char curr_symbol = source_code[curr_idx];
+    if (curr_idx == source_code.size()) {
+        return Token{TokenType::ERROR, "EOF", lineOfCode};
+    }
+
+    Token result = {};
+
+    // todo: support comments
+
+    if (isSpaceSymbol(curr_symbol)) {  // DONE
+        ++curr_idx;
+        return NextToken();
+    } else if (isNewLineSymbol(curr_symbol)) {  // DONE
+        ++lineOfCode;
+        ++curr_idx;
+        return NextToken();
+    } else if (isdigit(curr_symbol)) {  // DONE
+        return ParseInteger();
+    } else if (isalpha(curr_symbol)) {
+        return ParseIdentifier();
+    } else if (curr_symbol == '"') {  // DONE
+        return ParseString();
+    } else {
+        return ParsePunctuation();
+    }
+
+    throw std::invalid_argument((std::string("Not parsed at line") +
+                                 std::to_string(lineOfCode) +
+                                 " gen idx:" + std::to_string(curr_idx))
+                                    .c_str());
+
+    return result;
+}
+
+void Lexer::PrintResult() {
+    Token token;
+    while ((token = NextToken()).tokenType != TokenType::ERROR ||
+           token.rawValue != "EOF") {
+        std::set<TokenType> print_raws_tokens = {
+            TokenType::STR_CONST,
+            TokenType::INT_CONST,
+            TokenType::ERROR,
+            TokenType::BOOL_CONST,
+            TokenType::OBJECTID,
+            TokenType::TYPEID,
+        };
+        if (print_raws_tokens.count(token.tokenType)) {
+            if (token.tokenType == TokenType::STR_CONST ||
+                token.tokenType == ERROR) {
+                std::cout << "#" << token.lineOfCode << " "
+                          << TokenTypeName[token.tokenType] << " \"" << token.rawValue
+                          << "\"" << std::endl;
+                ;
+            } else {
+                std::cout << "#" << token.lineOfCode << " "
+                          << TokenTypeName[token.tokenType] << " " << token.rawValue
+                          << std::endl;
+                ;
+            }
+        } else {
+            if (token.tokenType == TokenType::PUNCTUATION) {
+                std::cout << "#" << token.lineOfCode << " '" << token.rawValue << "'"
+                          << std::endl;
+            } else {
+                std::cout << "#" << token.lineOfCode << " "
+                          << TokenTypeName[token.tokenType] << std::endl;
+            }
+        }
+    }
+}
