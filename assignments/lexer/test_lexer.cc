@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -19,14 +20,12 @@ std::string exec(const char* cmd) {
     }
     return result;
 }
+void compare_lexers(const std::string& file) {
+    const std::string original_lexer = "../../../bin/lexer";
+    const std::string lexer = "./lexer";
 
-const std::string example_stack = "../../PA1/stack.cl";
-const std::string original_lexer = "../../../bin/lexer";
-const std::string lexer = "./lexer";
-
-TEST(EndToEnd, StackAssignment) {
-    const std::string reference_cmd = original_lexer + " " + example_stack;
-    const std::string cmd = lexer + " " + example_stack;
+    const std::string reference_cmd = original_lexer + " " + file;
+    const std::string cmd = lexer + " " + file;
 
     std::string reference_output = exec(reference_cmd.c_str());
     std::string output = exec(cmd.c_str());
@@ -38,5 +37,18 @@ TEST(EndToEnd, StackAssignment) {
         getline(ref, ref_line);
         getline(lex, lex_line);
         ASSERT_EQ(ref_line, lex_line);
+    }
+}
+
+TEST(EndToEnd, StackAssignment) {
+    const std::string example_stack = "../../PA1/stack.cl";
+    compare_lexers(example_stack);
+}
+
+TEST(EndToEnd, Examples) {
+    const std::string path = "../../../examples";
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::cerr << entry.path() << std::endl;
+        compare_lexers(entry.path());
     }
 }

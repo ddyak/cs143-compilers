@@ -20,6 +20,7 @@ enum TokenType {
     WHILE,
     CASE,
     ESAC,
+    DARROW,
     NEW,
     OF,
     NOT,
@@ -49,6 +50,7 @@ inline std::map<TokenType, std::string> TokenTypeName = {
     {TokenType::WHILE, "WHILE"},
     {TokenType::CASE, "CASE"},
     {TokenType::ESAC, "ESAC"},
+    {TokenType::DARROW, "DARROW"},
     {TokenType::NEW, "NEW"},
     {TokenType::OF, "OF"},
     {TokenType::NOT, "NOT"},
@@ -88,7 +90,37 @@ struct Token {
     std::string rawValue;
     std::size_t lineOfCode;
 
-    friend std::ostream &operator<<(std::ostream &out, const Token &point);
+    friend inline std::ostream &operator<<(std::ostream &out, const Token &point);
 };
 
-std::ostream &operator<<(std::ostream &out, const Token &point);
+inline std::ostream &operator<<(std::ostream &out, const Token &token) {
+    static const std::set<TokenType> print_raws_tokens = {
+        TokenType::STR_CONST,
+        TokenType::INT_CONST,
+        TokenType::ERROR,
+        TokenType::BOOL_CONST,
+        TokenType::OBJECTID,
+        TokenType::TYPEID,
+    };
+    if (print_raws_tokens.count(token.tokenType)) {
+        if (token.tokenType == TokenType::STR_CONST ||
+            token.tokenType == ERROR) {
+            out << "#" << token.lineOfCode << " "
+                << TokenTypeName[token.tokenType] << " \"" << token.rawValue
+                << "\"";
+            ;
+        } else {
+            out << "#" << token.lineOfCode << " "
+                << TokenTypeName[token.tokenType] << " " << token.rawValue;
+        }
+    } else {
+        if (token.tokenType == TokenType::PUNCTUATION) {
+            out << "#" << token.lineOfCode << " '" << token.rawValue << "'";
+        } else {
+            out << "#" << token.lineOfCode << " "
+                << TokenTypeName[token.tokenType];
+        }
+    }
+
+    return out;
+}

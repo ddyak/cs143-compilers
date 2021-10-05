@@ -1,10 +1,7 @@
-#include "token.h"
+// #include "token.h"
 
-#include <iostream>
-#include <map>
-#include <set>
-#include <string>
+// #include <iostream>
 
-std::ostream &operator<<(std::ostream &out, const Token &point) {
-    return out;
-}
+// std::ostream &operator<<(std::ostream &out, const Token &point) {
+//     return out;
+// }

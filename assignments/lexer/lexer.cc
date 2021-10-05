@@ -49,7 +49,7 @@ Token Lexer::ParseString() {
                 return Token{TokenType::ERROR, "EOF in string constant", lineOfCode};
             }
             ++curr_idx;
-            const std::set<char> escaped_chars = {'b', 't', 'n', 'f'};
+            const std::set<char> escaped_chars = {'b', 't', 'n', 'f', '\"', '\\'};
             if (escaped_chars.count(source_code[curr_idx])) {
                 str += "\\";
                 str += source_code[curr_idx];
@@ -126,41 +126,82 @@ Token Lexer::ParsePunctuation() {
         return {TokenType::PUNCTUATION, "<", lineOfCode};
     }
 
+    if (curr_idx + 1 != source_code.size() && source_code[curr_idx] == '=' && source_code[curr_idx + 1] == '>') {
+        curr_idx += 2;
+        return {TokenType::DARROW, "=>", lineOfCode};
+    }
+
     if (uno_punctuation.count(source_code[curr_idx])) {
         return Token{TokenType::PUNCTUATION,
                      std::string() + source_code[curr_idx++], lineOfCode};
     }
 
-    std::cerr << "PUNCT: " << curr_idx << " " << source_code[curr_idx]
-              << std::endl;
-
     return {};
 }
 
-// !contract: NextToken produce token and set curr_idx to next symbol after
-// token
+void Lexer::ParseLineComment() {
+    while (curr_idx != source_code.size() && source_code[curr_idx] != '\n') {
+        ++curr_idx;
+    }
+
+    if (curr_idx != source_code.size() && source_code[curr_idx] == '\n') {
+        ++lineOfCode;
+        ++curr_idx;
+    }
+}
+
+void Lexer::ParseMultiLineComment() {
+    int cnt = 1;
+    ++curr_idx;
+    char prev_symbol = source_code[curr_idx - 1];
+    char cur_symbol = source_code[curr_idx];
+    while (curr_idx + 1 != source_code.size()) {
+        ++curr_idx;
+        prev_symbol = cur_symbol;
+        cur_symbol = source_code[curr_idx];
+        if (cur_symbol == ')' && prev_symbol == '*' && source_code[curr_idx - 2] != '(') {
+            if (--cnt == 0) break;
+        }
+        if (cur_symbol == '*' && prev_symbol == '(') {
+            ++cnt;
+        }
+        if (cur_symbol == '\n') {
+            ++lineOfCode;
+        }
+    }
+    ++curr_idx;
+}
+
 Token Lexer::NextToken() {
-    char curr_symbol = source_code[curr_idx];
     if (curr_idx == source_code.size()) {
         return Token{TokenType::ERROR, "EOF", lineOfCode};
     }
+    char curr_symbol = source_code[curr_idx];
+    char next_symbol = (curr_idx != source_code.size()) ? source_code[curr_idx + 1] : '#';
 
     Token result = {};
 
-    // todo: support comments
-
-    if (isSpaceSymbol(curr_symbol)) {  // DONE
+    if (isSpaceSymbol(curr_symbol)) {
         ++curr_idx;
         return NextToken();
-    } else if (isNewLineSymbol(curr_symbol)) {  // DONE
+    } else if (curr_symbol == '-' && next_symbol == '-') {
+        ParseLineComment();
+        return NextToken();
+    } else if (curr_symbol == '(' && next_symbol == '*') {
+        ParseMultiLineComment();
+        if (curr_idx == source_code.size()) {
+            return Token{TokenType::ERROR, "EOF in comment", lineOfCode};
+        }
+        return NextToken();
+    } else if (isNewLineSymbol(curr_symbol)) {
         ++lineOfCode;
         ++curr_idx;
         return NextToken();
-    } else if (isdigit(curr_symbol)) {  // DONE
+    } else if (isdigit(curr_symbol)) {
         return ParseInteger();
     } else if (isalpha(curr_symbol)) {
         return ParseIdentifier();
-    } else if (curr_symbol == '"') {  // DONE
+    } else if (curr_symbol == '"') {
         return ParseString();
     } else {
         return ParsePunctuation();
@@ -178,35 +219,6 @@ void Lexer::PrintResult() {
     Token token;
     while ((token = NextToken()).tokenType != TokenType::ERROR ||
            token.rawValue != "EOF") {
-        std::set<TokenType> print_raws_tokens = {
-            TokenType::STR_CONST,
-            TokenType::INT_CONST,
-            TokenType::ERROR,
-            TokenType::BOOL_CONST,
-            TokenType::OBJECTID,
-            TokenType::TYPEID,
-        };
-        if (print_raws_tokens.count(token.tokenType)) {
-            if (token.tokenType == TokenType::STR_CONST ||
-                token.tokenType == ERROR) {
-                std::cout << "#" << token.lineOfCode << " "
-                          << TokenTypeName[token.tokenType] << " \"" << token.rawValue
-                          << "\"" << std::endl;
-                ;
-            } else {
-                std::cout << "#" << token.lineOfCode << " "
-                          << TokenTypeName[token.tokenType] << " " << token.rawValue
-                          << std::endl;
-                ;
-            }
-        } else {
-            if (token.tokenType == TokenType::PUNCTUATION) {
-                std::cout << "#" << token.lineOfCode << " '" << token.rawValue << "'"
-                          << std::endl;
-            } else {
-                std::cout << "#" << token.lineOfCode << " "
-                          << TokenTypeName[token.tokenType] << std::endl;
-            }
-        }
+        std::cout << token << std::endl;
     }
 }

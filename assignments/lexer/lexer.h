@@ -14,8 +14,10 @@ class Lexer {
     Token ParseString();
     Token ParseIdentifier();
     Token ParsePunctuation();
+    void ParseLineComment();
+    void ParseMultiLineComment();
 
-    // !contract: NextToken produce token and set curr_idx to next symbol after
+    // !contract: NextToken produce token and set curr_idx to next symbol after token
     Token NextToken();
 
     void PrintResult();
@@ -26,7 +28,9 @@ class Lexer {
         return spaceSymbols.count(ch);
     }
 
-    bool isNewLineSymbol(char ch) const { return ch == '\n'; }
+    bool isNewLineSymbol(char ch) const {
+        return ch == '\n';
+    }
 
    private:
     std::string filename;
