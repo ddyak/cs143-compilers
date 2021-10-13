@@ -5,7 +5,7 @@
 #include <set>
 #include <string>
 
-enum TokenType {
+enum class TokenType {
     CLASS,
     ELSE,
     FI,
@@ -33,6 +33,7 @@ enum TokenType {
     LE,
     ASSIGN,
     PUNCTUATION,
+    EOFILE
 };
 
 inline std::map<TokenType, std::string> TokenTypeName = {
@@ -104,7 +105,7 @@ inline std::ostream &operator<<(std::ostream &out, const Token &token) {
     };
     if (print_raws_tokens.count(token.tokenType)) {
         if (token.tokenType == TokenType::STR_CONST ||
-            token.tokenType == ERROR) {
+            token.tokenType == TokenType::ERROR) {
             out << "#" << token.lineOfCode << " "
                 << TokenTypeName[token.tokenType] << " \"" << token.rawValue
                 << "\"";

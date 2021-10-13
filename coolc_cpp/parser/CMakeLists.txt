@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(my_project)
+project(parser)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
@@ -15,20 +15,24 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-    lexer
-    lexer.cc
+    ${PROJECT_NAME}
     main.cc
 )
 
+target_link_libraries(
+    ${PROJECT_NAME}
+    lexer_lib # my lib!
+)
+
 add_executable(
-    test_lexer
-    test_lexer.cc
+    test_parser
+    test_parser.cc
 )
 
 target_link_libraries(
-    test_lexer
+    test_parser
     gtest_main
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_lexer)
+gtest_discover_tests(test_parser)
