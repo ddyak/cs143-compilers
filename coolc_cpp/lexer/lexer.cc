@@ -43,34 +43,67 @@ Token Lexer::ParseString() {
             curr_idx += 1;
             return Token{TokenType::ERROR, "Unterminated string constant",
                          lineOfCode};
-        } else if (source_code[curr_idx] == '\\') {
+        }
+        if (source_code[curr_idx] == '\0') {
+            curr_idx += 1;
+            return Token{TokenType::ERROR, "String contains null character.",
+                         lineOfCode};
+        }
+        if (source_code[curr_idx] == '\"') {
+            ++curr_idx;
+            return Token{TokenType::STR_CONST, str, lineOfCode};
+        }
+
+        std::map<char, std::string> escaped_chars = {
+            {'\t', "t"},
+            {'\f', "f"},
+            {'\b', "b"},
+            {char(013), "013"},
+            {char(015), "015"},
+            {char(022), "022"},
+            {char(033), "033"},
+        };
+
+        if (escaped_chars.count(source_code[curr_idx])) {
+            str += "\\";
+            str += escaped_chars[source_code[curr_idx]];
+            ++curr_idx;
+            continue;
+        }
+
+        if (source_code[curr_idx] == '\\') {
             if (curr_idx + 1 == source_code.size()) {
                 ++curr_idx;
                 return Token{TokenType::ERROR, "EOF in string constant", lineOfCode};
             }
             ++curr_idx;
-            const std::set<char> escaped_chars = {'b', 't', 'n', 'f', '\"', '\\'};
-            if (escaped_chars.count(source_code[curr_idx])) {
-                str += "\\";
+            const std::set<char> force_escaped_chars = {'b', 't', 'n', 'f', '\"', '\\'};
+            if (force_escaped_chars.count(source_code[curr_idx])) {
+                str += '\\';
                 str += source_code[curr_idx];
+            } else if (escaped_chars.count(source_code[curr_idx])) {
+                str += "\\";
+                str += escaped_chars[source_code[curr_idx]];
+                ++curr_idx;
+                continue;
             } else if (source_code[curr_idx] == '\n') {
                 ++lineOfCode;
                 str += "\\n";
+            } else if (source_code[curr_idx] == '\0') {
+                return Token{TokenType::ERROR, "String contains escaped null character.",
+                             lineOfCode};
             } else {
                 str += source_code[curr_idx];
             }
             ++curr_idx;
             continue;
-        } else if (source_code[curr_idx] == '\"') {
-            ++curr_idx;
-            return Token{TokenType::STR_CONST, str, lineOfCode};
         } else {
             str += source_code[curr_idx];
             ++curr_idx;
         }
     }
 
-    return {};
+    return Token{TokenType::ERROR, "String not parsed", lineOfCode};
 }
 
 Token Lexer::ParseIdentifier() {
@@ -136,7 +169,9 @@ Token Lexer::ParsePunctuation() {
                      std::string() + source_code[curr_idx++], lineOfCode};
     }
 
-    return {};
+    ++curr_idx;
+
+    return Token{TokenType::ERROR, "Punctuation not parsed", lineOfCode};
 }
 
 void Lexer::ParseLineComment() {
@@ -150,7 +185,7 @@ void Lexer::ParseLineComment() {
     }
 }
 
-void Lexer::ParseMultiLineComment() {
+bool Lexer::ParseMultiLineComment() {
     int cnt = 1;
     ++curr_idx;
     char prev_symbol = source_code[curr_idx - 1];
@@ -170,11 +205,12 @@ void Lexer::ParseMultiLineComment() {
         }
     }
     ++curr_idx;
+    return cnt == 0;
 }
 
 Token Lexer::NextToken() {
     if (curr_idx == source_code.size()) {
-        return Token{TokenType::ERROR, "EOF", lineOfCode};
+        return Token{TokenType::EOFILE, "", lineOfCode};
     }
     char curr_symbol = source_code[curr_idx];
     char next_symbol = (curr_idx != source_code.size()) ? source_code[curr_idx + 1] : '#';
@@ -188,11 +224,10 @@ Token Lexer::NextToken() {
         ParseLineComment();
         return NextToken();
     } else if (curr_symbol == '(' && next_symbol == '*') {
-        ParseMultiLineComment();
-        if (curr_idx == source_code.size()) {
-            return Token{TokenType::ERROR, "EOF in comment", lineOfCode};
+        if (ParseMultiLineComment()) {
+            return NextToken();
         }
-        return NextToken();
+        return Token{TokenType::ERROR, "EOF in comment", lineOfCode};
     } else if (isNewLineSymbol(curr_symbol)) {
         ++lineOfCode;
         ++curr_idx;
@@ -217,8 +252,10 @@ Token Lexer::NextToken() {
 
 void Lexer::PrintResult() {
     Token token;
-    while ((token = NextToken()).tokenType != TokenType::ERROR ||
-           token.rawValue != "EOF") {
+    while ((token = NextToken()).tokenType != TokenType::EOFILE && token.tokenType != TokenType::ERROR) {
+        std::cout << token << std::endl;
+    }
+    if (token.tokenType == TokenType::ERROR) {
         std::cout << token << std::endl;
     }
 }

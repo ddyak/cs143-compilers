@@ -15,7 +15,7 @@ class Lexer {
     Token ParseIdentifier();
     Token ParsePunctuation();
     void ParseLineComment();
-    void ParseMultiLineComment();
+    bool ParseMultiLineComment();
 
     // !contract: NextToken produce token and set curr_idx to next symbol after token
     Token NextToken();
