@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <cassert>
 
 enum class TokenType {
     CLASS,
@@ -33,6 +34,7 @@ enum class TokenType {
     LE,
     ASSIGN,
     PUNCTUATION,
+    PROGRAM,
     EOFILE
 };
 
@@ -91,10 +93,67 @@ struct Token {
     std::string rawValue;
     std::size_t lineOfCode;
 
-    friend inline std::ostream &operator<<(std::ostream &out, const Token &point);
+    friend inline std::ostream &operator<<(std::ostream &out, const Token &token);
+    friend inline std::istream &operator>>(std::istream &in, Token &token);
 };
 
+inline std::istream &operator>>(std::istream &in, Token &token) {
+    std::string sharpPart;
+    if (!(in >> sharpPart)) {
+        return in;
+    }
+    
+    if (sharpPart[0] != '#') assert(false);
+    sharpPart = sharpPart.substr(1, sharpPart.size() - 1);
+     
+    if (sharpPart.find_first_not_of("0123456789") != std::string::npos) {
+        std::string filename;
+        in >> filename;
+        filename = filename.substr(1, filename.size() - 2);
+        token.tokenType = TokenType::PROGRAM;
+        token.rawValue = filename;
+        return in;
+    }
+    token.lineOfCode = std::stoi(sharpPart);
+
+    std::string tokenTypeOrLiteral;
+    in >> tokenTypeOrLiteral;
+    if (tokenTypeOrLiteral[0] == '\'') {
+        token.tokenType = TokenType::PUNCTUATION;
+        token.rawValue = tokenTypeOrLiteral.substr(1, tokenTypeOrLiteral.size() - 2);
+        return in;
+    }
+
+    std::map<std::string, TokenType> NameTokenType;
+    for (const auto& [k, v]: TokenTypeName) {
+        NameTokenType[v] = k;
+    }
+    
+    if (!NameTokenType.count(tokenTypeOrLiteral)) assert(false);
+
+    token.tokenType = NameTokenType[tokenTypeOrLiteral];
+
+    static const std::set<TokenType> print_raws_tokens = {
+        TokenType::STR_CONST,
+        TokenType::INT_CONST,
+        TokenType::ERROR,
+        TokenType::BOOL_CONST,
+        TokenType::OBJECTID,
+        TokenType::TYPEID,
+    };
+
+    if (print_raws_tokens.count(token.tokenType)) {
+        in >> token.rawValue;
+    }
+
+    return in;
+}
+
 inline std::ostream &operator<<(std::ostream &out, const Token &token) {
+    if (token.tokenType == TokenType::PROGRAM) {
+        out << "#name \"" << token.rawValue << "\"";
+        return out;
+    }
     static const std::set<TokenType> print_raws_tokens = {
         TokenType::STR_CONST,
         TokenType::INT_CONST,

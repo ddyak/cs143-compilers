@@ -20,14 +20,21 @@ std::string exec(const char* cmd) {
     }
     return result;
 }
-void compare_parsers(const std::string& file) {
+
+void compare_parsers(const std::vector<std::string>& files) {
     const std::string lexer = "../../../bin/lexer";
 
     const std::string original_parser = "../../../bin/parser";
     const std::string parser = "./parser";
 
-    const std::string reference_cmd = lexer + " " + file + " | " + original_parser;
-    const std::string cmd = lexer + " " + file + " | " + parser;
+    std::ostringstream imploded;
+    std::copy(files.begin(), files.end(),
+              std::ostream_iterator<std::string>(imploded, " "));
+
+    const std::string files_str = imploded.str();
+
+    const std::string reference_cmd = lexer + " " + files_str + " | " + original_parser;
+    const std::string cmd = lexer + " " + files_str + " | " + parser;
 
     std::string reference_output = exec(reference_cmd.c_str());
     std::string output = exec(cmd.c_str());
@@ -42,15 +49,20 @@ void compare_parsers(const std::string& file) {
     }
 }
 
-TEST(EndToEnd, StackAssignment) {
-    const std::string example_stack = "../../PA1/stack.cl";
-    compare_parsers(example_stack);
+TEST(EndToEnd, Dummy) {
+    const std::string example = "test.cl";
+    compare_parsers({example});
 }
 
-TEST(EndToEnd, Examples) {
-    const std::string path = "../../../examples";
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::cerr << entry.path() << std::endl;
-        compare_parsers(entry.path());
-    }
-}
+// TEST(EndToEnd, StackAssignment) {
+//     const std::string example_stack = "../../PA1/stack.cl";
+//     compare_parsers({example_stack});
+// }
+
+// TEST(EndToEnd, Examples) {
+//     const std::string path = "../../../examples";
+//     for (const auto& entry : std::filesystem::directory_iterator(path)) {
+//         std::cerr << entry.path() << std::endl;
+//         compare_parsers({entry.path()});
+//     }
+// }
