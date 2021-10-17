@@ -39,30 +39,38 @@ void compare_parsers(const std::vector<std::string>& files) {
     std::string reference_output = exec(reference_cmd.c_str());
     std::string output = exec(cmd.c_str());
 
+    // on correct input produce correct ouput
+    // my and referece error handling not equal
+    if (reference_output.empty()) {
+        ASSERT_TRUE(output.empty());
+        return;
+    }
+
     std::istringstream ref(reference_output);
     std::istringstream my(output);
     while (!ref.eof() || !my.eof()) {
         std::string ref_line, my_line;
         getline(ref, ref_line);
         getline(my, my_line);
+
         ASSERT_EQ(ref_line, my_line);
     }
 }
 
-TEST(EndToEnd, Dummy) {
-    const std::string example = "test.cl";
-    compare_parsers({example});
+TEST(EndToEnd, StackAssignment) {
+    const std::string path = "../../PA1/stack.cl";
+    compare_parsers({path, path});
 }
 
-// TEST(EndToEnd, StackAssignment) {
-//     const std::string example_stack = "../../PA1/stack.cl";
-//     compare_parsers({example_stack});
-// }
+TEST(EndToEnd, Multiple) {
+    const std::string example_stack = "../../PA1/stack.cl";
+    compare_parsers({example_stack});
+}
 
-// TEST(EndToEnd, Examples) {
-//     const std::string path = "../../../examples";
-//     for (const auto& entry : std::filesystem::directory_iterator(path)) {
-//         std::cerr << entry.path() << std::endl;
-//         compare_parsers({entry.path()});
-//     }
-// }
+TEST(EndToEnd, EndToEnd) {
+    const std::string path = "../../../end-to-end";
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::cerr << entry.path() << std::endl;
+        compare_parsers({entry.path()});
+    }
+}

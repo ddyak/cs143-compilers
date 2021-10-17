@@ -103,7 +103,9 @@ inline std::istream &operator>>(std::istream &in, Token &token) {
         return in;
     }
     
-    if (sharpPart[0] != '#') assert(false);
+    if (sharpPart[0] != '#') {
+        assert(false);
+    }
     sharpPart = sharpPart.substr(1, sharpPart.size() - 1);
      
     if (sharpPart.find_first_not_of("0123456789") != std::string::npos) {
@@ -143,7 +145,11 @@ inline std::istream &operator>>(std::istream &in, Token &token) {
     };
 
     if (print_raws_tokens.count(token.tokenType)) {
-        in >> token.rawValue;
+        std::getline(std::cin, token.rawValue);
+        auto start = token.rawValue.find_first_not_of(' ');
+        auto end = token.rawValue.find_last_not_of(' ');
+        std::string trimmedString;
+        token.rawValue = token.rawValue.substr(start, (end - start) + 1);
     }
 
     return in;

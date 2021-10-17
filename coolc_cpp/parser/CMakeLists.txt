@@ -17,6 +17,7 @@ enable_testing()
 add_executable(
     ${PROJECT_NAME}
     main.cc
+    parser.cc
 )
 
 target_link_libraries(
