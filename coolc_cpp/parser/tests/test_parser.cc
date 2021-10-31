@@ -58,12 +58,12 @@ void compare_parsers(const std::vector<std::string>& files) {
 }
 
 TEST(EndToEnd, StackAssignment) {
-    const std::string path = "../../PA1/stack.cl";
+    const std::string path = "../../stack_example/stack.cl";
     compare_parsers({path, path});
 }
 
 TEST(EndToEnd, Multiple) {
-    const std::string example_stack = "../../PA1/stack.cl";
+    const std::string example_stack = "../../stack_example/stack.cl";
     compare_parsers({example_stack});
 }
 
