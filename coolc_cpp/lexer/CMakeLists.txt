@@ -4,7 +4,31 @@ project(lexer)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
 
+# app
+add_executable(
+    ${PROJECT_NAME}
+    src/lexer.cc
+    src/main.cc
+)
 
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC include
+    PRIVATE src
+)
+
+# lib
+add_library(
+    lexer_lib
+    lib/token.cc
+)
+
+target_include_directories(
+    lexer_lib
+    PUBLIC include
+)
+
+# tests
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -15,14 +39,8 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-    ${PROJECT_NAME}
-    lexer.cc
-    main.cc
-)
-
-add_executable(
     test_lexer
-    test_lexer.cc
+    tests/test_lexer.cc
 )
 
 target_link_libraries(
@@ -32,15 +50,3 @@ target_link_libraries(
 
 include(GoogleTest)
 gtest_discover_tests(test_lexer)
-
-
-# Add a library with the above sources
-add_library(
-    lexer_lib
-    lexer.cc
-)
-
-target_include_directories(
-    lexer_lib
-    PUBLIC ${PROJECT_SOURCE_DIR}
-)

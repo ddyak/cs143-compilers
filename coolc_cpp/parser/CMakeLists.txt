@@ -4,7 +4,35 @@ project(parser)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
 
+# app
+add_executable(
+    ${PROJECT_NAME}
+    src/parser.cc
+    src/main.cc
+)
 
+target_include_directories(
+    ${PROJECT_NAME}
+    PRIVATE src
+)
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    lexer_lib # my lib!
+)
+
+# # lib
+# add_library(
+#     parser_lib
+#     lib/token.cc
+# )
+
+# target_include_directories(
+#     parser_lib
+#     PUBLIC include
+# )
+
+# tests
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -15,19 +43,8 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-    ${PROJECT_NAME}
-    main.cc
-    parser.cc
-)
-
-target_link_libraries(
-    ${PROJECT_NAME}
-    lexer_lib # my lib!
-)
-
-add_executable(
     test_parser
-    test_parser.cc
+    tests/test_parser.cc
 )
 
 target_link_libraries(
