@@ -22,7 +22,7 @@ std::string exec(const char* cmd) {
 }
 
 void compare_lexers(const std::vector<std::string>& files) {
-    const std::string original_lexer = "../../../bin/lexer";
+    const std::string original_lexer = "../../resource/bin/lexer";
     const std::string lexer = "./lexer";
 
     std::ostringstream imploded;
@@ -75,7 +75,7 @@ TEST(EndToEnd, MultipleFileInput) {
 }
 
 TEST(EndToEnd, OriginalCourseTest) {
-    const std::string path = "../../../lexer-tests";
+    const std::string path = "../../lexer/tests/end-to-end";
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
         compare_lexers({entry.path()});
     }

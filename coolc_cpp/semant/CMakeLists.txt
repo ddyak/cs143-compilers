@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(parser)
+project(semant)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
@@ -7,8 +7,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
 # app
 add_executable(
     ${PROJECT_NAME}
-    src/parser.cc
-    src/syntax.cc
     src/main.cc
 )
 
@@ -17,10 +15,10 @@ target_include_directories(
     PRIVATE src
 )
 
-target_link_libraries(
-    ${PROJECT_NAME}
-    lexer_lib # my lib!
-)
+# target_link_libraries(
+#     ${PROJECT_NAME}
+#     lexer_lib # my lib!
+# )
 
 # # lib
 # add_library(
@@ -44,12 +42,12 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-    test_parser
-    tests/test_parser.cc
+    test_semant
+    tests/test_semant.cc
 )
 
 target_link_libraries(
-    test_parser
+    test_semant
     gtest_main
 )
 

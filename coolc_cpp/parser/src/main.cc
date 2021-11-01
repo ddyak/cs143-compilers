@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "parser.h"
+#include "parser.h"
 #include "lexer/token.h"
 
 std::vector<Token> parseInput() {

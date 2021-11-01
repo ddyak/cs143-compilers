@@ -22,9 +22,8 @@ std::string exec(const char* cmd) {
 }
 
 void compare_parsers(const std::vector<std::string>& files) {
-    const std::string lexer = "../../../bin/lexer";
-
-    const std::string original_parser = "../../../bin/parser";
+    const std::string lexer = "../../resource/bin/lexer";
+    const std::string original_parser = "../../resource/bin/parser";
     const std::string parser = "./parser";
 
     std::ostringstream imploded;
@@ -68,7 +67,7 @@ TEST(EndToEnd, Multiple) {
 }
 
 TEST(EndToEnd, EndToEnd) {
-    const std::string path = "../../../end-to-end";
+    const std::string path = "../../parser/tests/end-to-end";
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
         std::cerr << entry.path() << std::endl;
         compare_parsers({entry.path()});
