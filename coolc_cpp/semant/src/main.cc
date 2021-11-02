@@ -1,10 +1,16 @@
 #include <iostream>
 
-struct A {
-    int a;
-};
+#include "parser/syntax.h"
+#include "inheritance.h"
+
 
 int main() {
-    std::cout << std::is_same_v<decltype(A{1}), int> << '\n'; // true
+    Program program = ReadProgram();
+    // PrintProgram(program);
+    InheritanceAnalyzer inherAnalyzer(program);
+    if (!inherAnalyzer.checkCorrectness()) {
+        std::cerr << "Compilation halted due to static semantic errors." << std::endl;
+        return 1;
+    }
     return 0;
 }

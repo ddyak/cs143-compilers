@@ -4,6 +4,17 @@ project(lexer)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
 
+# lib
+add_library(
+    lexer_lib
+    lib/token.cc
+)
+
+target_include_directories(
+    lexer_lib
+    PUBLIC include
+)
+
 # app
 add_executable(
     ${PROJECT_NAME}
@@ -17,15 +28,9 @@ target_include_directories(
     PRIVATE src
 )
 
-# lib
-add_library(
+target_link_libraries(
+    ${PROJECT_NAME}
     lexer_lib
-    lib/token.cc
-)
-
-target_include_directories(
-    lexer_lib
-    PUBLIC include
 )
 
 # tests

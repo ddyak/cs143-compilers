@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "lexer/token.h"
-#include "syntax.h"
+#include "parser/syntax.h"
 
 class Parser {
    public:

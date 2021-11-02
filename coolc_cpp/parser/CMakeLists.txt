@@ -4,34 +4,35 @@ project(parser)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
 
+# lib
+add_library(
+    parser_lib
+    lib/syntax.cc
+)
+
+target_include_directories(
+    parser_lib
+    PUBLIC include
+)
+
 # app
 add_executable(
     ${PROJECT_NAME}
     src/parser.cc
-    src/syntax.cc
     src/main.cc
 )
 
 target_include_directories(
     ${PROJECT_NAME}
+    PUBLIC include
     PRIVATE src
 )
 
 target_link_libraries(
     ${PROJECT_NAME}
-    lexer_lib # my lib!
+    lexer_lib
+    parser_lib
 )
-
-# # lib
-# add_library(
-#     parser_lib
-#     lib/token.cc
-# )
-
-# target_include_directories(
-#     parser_lib
-#     PUBLIC include
-# )
 
 # tests
 include(FetchContent)
@@ -52,6 +53,3 @@ target_link_libraries(
     test_parser
     gtest_main
 )
-
-include(GoogleTest)
-gtest_discover_tests(test_parser)

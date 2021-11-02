@@ -1,4 +1,4 @@
-#include "syntax.h"
+#include "parser/syntax.h"
 
 #include <iostream>
 #include <type_traits>
@@ -14,7 +14,7 @@ void PrintFormal(std::size_t offset, const Formal& formal) {
 }
 
 void PrintFeature(std::size_t offset, const Feature& feature) {
-    if (!feature.isVar) {
+    if (!feature.isAttr) {
         std::cout << std::string(offset, ' ') << "#" << feature.lineOfCode << std::endl;
         std::cout << std::string(offset, ' ') << "_method" << std::endl;
         offset += 2;
@@ -210,7 +210,7 @@ void PrintExpression(std::size_t offset, const Expression& expression) {
     std::cout << std::string(offset - 2, ' ') << ": " << expression.type << std::endl;
 }
 
-// #include <optional>
+#include <optional>
 
 // std::optional<Expression> ReadExpression() {
 //     //
@@ -244,35 +244,38 @@ void PrintExpression(std::size_t offset, const Expression& expression) {
 //     return {};
 // }
 
-// std::optional<Class> ReadClass() {
-//     Class cls;
-//     std::string str;
-//     std::cin >> str;
-//     cls.lineOfCode = std::stoi(str.substr(1, str.size() - 1));
-//     std::cin >> str;
-//     std::cin >> cls.id.value;
-//     std::cin >> cls.baseClass.value;
-//     std::cin >> cls.filename;
-//     std::cin >> str; // "("
+std::optional<Class> ReadClass() {
+    Class cls;
+    std::string str;
+    if (!(std::cin >> str)) {
+        return {};
+    }
+    cls.lineOfCode = std::stoi(str.substr(1, str.size() - 1));
+    std::cin >> str;
+    std::cin >> cls.id.value;
+    std::cin >> cls.baseClass.value;
+    std::cin >> cls.filename;
+    cls.filename = cls.filename.substr(1, cls.filename.size() - 2);
+    std::cin >> str; // "("
 
-//     while (auto feature = ReadFeature()) {
-//         // program.classes.push_back(std::make_shared<Class>(cls.value()));
-//     }
+    // while (auto feature = ReadFeature()) {
+        // program.classes.push_back(std::make_shared<Class>(cls.value()));
+    // }
 
-//     std::cin >> str; // ")"
+    std::cin >> str; // ")"
 
-//     return cls;
-// }
+    return cls;
+}
 
-// Program ReadProgram() {
-//     Program program;
-//     std::string _;
-//     std::getline(std::cin, _);
-//     std::getline(std::cin, _);
+Program ReadProgram() {
+    Program program;
+    std::string _;
+    std::getline(std::cin, _);
+    std::getline(std::cin, _);
 
-//     while (auto cls = ReadClass()) {
-//         program.classes.push_back(std::make_shared<Class>(cls.value()));
-//     }
+    while (auto cls = ReadClass()) {
+        program.classes.push_back(std::make_shared<Class>(cls.value()));
+    }
 
-//     return program;
-// }
+    return program;
+}

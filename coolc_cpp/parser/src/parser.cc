@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "lexer/token.h"
+#include "parser/syntax.h"
 
 void syntax_error(const Token& token) {
     std::cerr << token << std::endl;
@@ -74,7 +75,7 @@ Feature Parser::parseFeature() {
     feature.lineOfCode = next_->lineOfCode;
     feature.id = parseIdentifier();
     if (next_->rawValue == "(") {
-        feature.isVar = false;
+        feature.isAttr = false;
         ++next_;
         while (next_->rawValue != ")") {
             feature.arguments.push_back(parseFormal());
@@ -92,7 +93,7 @@ Feature Parser::parseFeature() {
         if (next_->rawValue != "}") syntax_error(*next_);
         ++next_;
     } else {
-        feature.isVar = true;
+        feature.isAttr = true;
         if (next_->rawValue != ":") syntax_error(*next_);
         ++next_;
         feature.type = parseType();

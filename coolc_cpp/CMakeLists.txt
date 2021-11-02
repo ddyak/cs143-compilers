@@ -9,3 +9,4 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # Add sub directories
 add_subdirectory(lexer)
 add_subdirectory(parser)
+add_subdirectory(semant)

@@ -134,7 +134,7 @@ struct Feature {
     std::shared_ptr<Expression> expr;
 
     std::size_t lineOfCode = INVALID_LINE_OF_CODE;
-    bool isVar;
+    bool isAttr;
 };
 
 struct Class {
@@ -151,12 +151,23 @@ struct Program {
 };
 
 ///////////////// writer
-void PrintExpression(std::size_t offset, const Expression& expression);
-void PrintFormal(std::size_t offset, const Formal& formal);
-void PrintFeature(std::size_t offset, const Feature& feature);
+void PrintProgram(const Program& program); // only this public
+// private:
 void PrintClass(std::size_t offset, const Class& cls);
-void PrintProgram(const Program& program);
+void PrintFeature(std::size_t offset, const Feature& feature);
+void PrintFormal(std::size_t offset, const Formal& formal);
+void PrintExpression(std::size_t offset, const Expression& expression);
 void PrintBranchExpr(std::size_t offset, const BranchExpr& branch);
+
+///////////////// reader
+Program ReadProgram(); // only this public
+// private:
+// void PrintClass(std::size_t offset, const Class& cls);
+// void PrintFeature(std::size_t offset, const Feature& feature);
+// void PrintFormal(std::size_t offset, const Formal& formal);
+// void PrintExpression(std::size_t offset, const Expression& expression);
+// void PrintBranchExpr(std::size_t offset, const BranchExpr& branch);
+
 
 // helper type for the visitor
 template <class... Ts>
@@ -164,5 +175,3 @@ struct overloaded : Ts... { using Ts::operator()...; };
 // explicit deduction guide (not needed as of C++20)
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
-
-///////////////// reader
